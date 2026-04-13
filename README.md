@@ -9,3 +9,15 @@ Just run .exe file and browser will open automatically at "http://localhost:1808
 Preview
 <img width="2560" height="1440" alt="Main1" src="https://github.com/user-attachments/assets/f9c5161f-7dba-4fd4-aa20-3fff33d9c038" />
 <img width="2560" height="1440" alt="History2" src="https://github.com/user-attachments/assets/a4265961-3e8f-4884-9ff5-b844cba488c7" />
+
+
+https://github.com/user-attachments/assets/21d8ce7f-e816-4df5-a6dc-a002b0069f65
+
+
+
+
+
+
+
+
+
