@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Describe-It | Luxury Lexicon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-main: #e0e0e0;
+            --text-dim: #777;
+            --accent-blue: #00e5ff; 
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* --- BACKGROUND AMBIENCE --- */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.05) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            z-index: -1;
+        }
+
+        /* --- MAIN UI --- */
+        .app-container {
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .word-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: var(--text-dim);
+            margin-bottom: 15px;
+        }
+
+        .word-display {
+            font-size: 5.5rem;
+            font-weight: 800;
+            letter-spacing: -4px;
+            margin: 0 0 40px 0;
+            background: linear-gradient(180deg, #fff 30%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- INPUT & RGB EFFECT --- */
+        .input-group {
+            position: relative;
+            margin-bottom: 40px;
+            border-radius: 24px;
+            padding: 2px; /* Space for the RGB border */
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .input-group::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            background: conic-gradient(from 90deg, #ff0000, #00ff00, #0000ff, #ff0000);
+            animation: rotateRGB 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .input-group.active-rgb::before {
+            opacity: 1;
+            animation: rotateRGB 3s linear infinite, fadeOutRGB 1.2s ease-out forwards;
+        }
+
+        .description-input {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            padding: 25px;
+            background: #151515; /* Darker base for contrast */
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            font-weight: 300;
+            line-height: 1.6;
+            resize: none;
+            backdrop-filter: blur(20px);
+            z-index: 2;
+        }
+
+        /* --- CONTROLS --- */
+        .controls { display: flex; gap: 15px; justify-content: center; }
+
+        .btn {
+            padding: 16px 35px;
+            border-radius: 50px;
+            border: 1px solid transparent;
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary { background: var(--accent-blue); color: #000; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 229, 255, 0.3); }
+        
+        .btn-secondary { background: transparent; color: var(--text-dim); border: 1px solid var(--glass-border); }
+        .btn-secondary:hover { color: #fff; border-color: #444; }
+
+        /* --- HISTORY WIDGET (Top Right) --- */
+        .history-plate {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 300px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 25px;
+            text-align: left;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .plate-label { font-size: 0.6rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 8px; }
+        .plate-word { color: var(--accent-blue); font-weight: 800; font-size: 1.2rem; margin-bottom: 5px; }
+        .plate-desc { font-size: 0.8rem; color: #999; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .see-more {
+            margin-top: 15px;
+            font-size: 0.7rem;
+            color: #fff;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .see-more:hover { opacity: 1; color: var(--accent-blue); }
+
+        /* --- MODAL ARCHIVE --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(40px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .history-window {
+            width: 90%;
+            max-width: 800px;
+            height: 70vh;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 60px;
+            overflow-y: auto;
+            transform: translateY(40px);
+            transition: var(--transition);
+        }
+        .modal-overlay.active .history-window { transform: translateY(0); }
+
+        .history-item {
+            padding: 25px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .close-btn { position: absolute; top: 40px; right: 40px; font-size: 2rem; cursor: pointer; color: var(--text-dim); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes rotateRGB { to { transform: rotate(360deg); } }
+        @keyframes fadeOutRGB { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+        #status {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: #000;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        #status.show { opacity: 1; }
+/* --- LUXURY PULSATING SCROLLBAR --- */
+
+/* 1. The Scrollbar Track (The path the rod slides on) */
+.history-window::-webkit-scrollbar {
+    width: 6px; /* Keep it thin and elegant */
+}
+
+.history-window::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.01); /* Almost invisible */
+    border-radius: 10px;
+}
+
+/* 2. The Scrollbar Thumb (The "Rod") */
+.history-window::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.5); /* Initial glow */
+    animation: pulseRod 2s infinite ease-in-out;
+}
+
+/* 3. The Pulsating Animation */
+@keyframes pulseRod {
+    0% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4);
+        background: #00b8cc; /* Slightly dimmer blue */
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.8), 0 0 30px rgba(0, 229, 255, 0.2);
+        background: var(--accent-blue); /* Peak brightness */
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4);
+        background: #00b8cc;
+    }
+}
+
+/* For Firefox (Limited customization, but keeps it clean) */
+.history-window {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-blue) transparent;
+}
+    </style>
+</head>
+<body>
+
+    <div class="history-plate" id="history-plate" style="opacity: 0;">
+        <div class="plate-label">Latest Log</div>
+        <div class="plate-word" id="plate-word">---</div>
+        <div class="plate-desc" id="plate-desc">Write something to begin.</div>
+        <div class="see-more" onclick="toggleModal(true)">Open Archive →</div>
+    </div>
+
+    <div class="app-container">
+        <div class="word-category">Active Session</div>
+        <h1 class="word-display" id="word-target">---</h1>
+
+        <div class="input-group" id="input-container">
+            <textarea 
+                class="description-input" 
+                id="description-input" 
+                placeholder="Type your description..."></textarea>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="submitDescription()">Save Entry</button>
+            <button class="btn btn-secondary" onclick="getNewWord()">Skip Word</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="history-modal">
+        <div class="close-btn" onclick="toggleModal(false)">×</div>
+        <div class="history-window">
+            <h2 style="font-size: 2rem; margin-bottom: 30px;">Archive</h2>
+            <div id="history-grid"></div>
+        </div>
+    </div>
+
+    <div id="status">Action Logged</div>
+
+    <script>
+        const API_BASE = 'http://localhost:18080/api';
+        let currentWord = '';
+
+        async function getNewWord() {
+            try {
+                const res = await fetch(`${API_BASE}/random`);
+                const data = await res.json();
+                currentWord = data.word;
+                document.getElementById('word-target').innerText = currentWord;
+                document.getElementById('description-input').value = '';
+            } catch (e) { console.error("Server Offline"); }
+        }
+
+        async function submitDescription() {
+            const desc = document.getElementById('description-input').value.trim();
+            if (!desc) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: currentWord, description: desc })
+                });
+
+                if (res.ok) {
+                    showToast("Success");
+                    refreshHistoryPlate();
+                    setTimeout(getNewWord, 800);
+                }
+            } catch (e) { showToast("Error"); }
+        }
+
+        async function refreshHistoryPlate() {
+            try {
+                const res = await fetch(`${API_BASE}/history`);
+                const data = await res.json();
+                if (data.history && data.history.length > 0) {
+                    const last = data.history[0];
+                    document.getElementById('history-plate').style.opacity = '1';
+                    document.getElementById('plate-word').innerText = last.word;
+                    document.getElementById('plate-desc').innerText = last.description;
+                }
+            } catch (e) {}
+        }
+
+        async function toggleModal(show) {
+            const modal = document.getElementById('history-modal');
+            if (show) {
+                modal.classList.add('active');
+                loadFullHistory();
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        async function loadFullHistory() {
+            const grid = document.getElementById('history-grid');
+            try {
+                const res = await fetch(`${API_BASE}/history`);
+                const data = await res.json();
+                grid.innerHTML = data.history.map(item => `
+                    <div class="history-item">
+                        <div>
+                            <div style="color:var(--accent-blue); font-weight:800">${item.word}</div>
+                            <div style="color:#888; font-size:0.9rem; margin-top:5px">${item.description}</div>
+                        </div>
+                        <div style="color:#333; font-size:0.7rem">${item.date}</div>
+                    </div>
+                `).join('');
+            } catch (e) { grid.innerHTML = "Empty Archive."; }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('status');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // RGB Trigger
+        document.getElementById('description-input').addEventListener('focus', () => {
+            const container = document.getElementById('input-container');
+            container.classList.add('active-rgb');
+            setTimeout(() => container.classList.remove('active-rgb'), 1300);
+        });
+
+        window.onload = () => {
+            getNewWord();
+            refreshHistoryPlate();
+        };
+    </script>
+</body>
+</html>
